@@ -11,7 +11,7 @@ CBOP
 C     !ROUTINE: SEAICE_CG2D_SR
 C     !INTERFACE:
       SUBROUTINE SEAICE_CG2D_SR(
-     I                aC2d, aW2d, aS2d, rt1, rt2,
+     I                aC2d, aW2d, aE2d, aS2d, aN2d,
      U                cg2d_b, cg2d_x,
      O                firstResidual, minResidualSq, lastResidual,
      U                numIters, nIterMin,
@@ -52,11 +52,11 @@ C                  Out: the actual number of iterations used
 C     nIterMin  :: Inp: decide to store (if >=0) or not (if <0) lowest res. sol.
 C                  Out: iteration number corresponding to lowest residual
 C     myThid    :: Thread on which I am working.
-      _RL  aW2d (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RL  aS2d (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RL  aC2d (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RL  rt1  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RL  rt2  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL  aW2d  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL  aE2d  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL  aC2d  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL  aS2d  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL  aN2d  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL  cg2d_b(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL  cg2d_x(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL  cg2dTolerance
@@ -211,9 +211,9 @@ C-    Initialise saved solution
          DO i=1,sNx
           cg2d_r(i,j,bi,bj) = cg2d_b(i,j,bi,bj) -
      &    (aW2d(i,j,bi,bj)*cg2d_x(i-1,j  ,bi,bj)
-     &    +aS2d(i,j,bi,bj)*cg2d_x(i+1,j  ,bi,bj)
-     &    + rt1(i,j,bi,bj)*cg2d_x(i  ,j-1,bi,bj)
-     &    + rt2(i,j,bi,bj)*cg2d_x(i  ,j+1,bi,bj)
+     &    +aE2d(i,j,bi,bj)*cg2d_x(i+1,j  ,bi,bj)
+     &    +aS2d(i,j,bi,bj)*cg2d_x(i  ,j-1,bi,bj)
+     &    +aN2d(i,j,bi,bj)*cg2d_x(i  ,j+1,bi,bj)
      &    +aC2d(i,j,bi,bj)*cg2d_x(i  ,j  ,bi,bj)
      &    )
           errTile(bi,bj)    = errTile(bi,bj)
@@ -290,15 +290,10 @@ C==    q = A.s
          DO i=1,sNx
           cg2d_q(i,j,bi,bj) =
      &     aW2d(i,j,bi,bj)*cg2d_s(i-1,j  ,bi,bj)
-     &    +aS2d(i,j,bi,bj)*cg2d_s(i+1,j  ,bi,bj)
-     &    + rt1(i,j,bi,bj)*cg2d_s(i  ,j-1,bi,bj)
-     &    + rt2(i,j,bi,bj)*cg2d_s(i  ,j+1,bi,bj)
+     &    +aE2d(i,j,bi,bj)*cg2d_s(i+1,j  ,bi,bj)
+     &    +aS2d(i,j,bi,bj)*cg2d_s(i  ,j-1,bi,bj)
+     &    +aN2d(i,j,bi,bj)*cg2d_s(i  ,j+1,bi,bj)
      &    +aC2d(i,j,bi,bj)*cg2d_s(i  ,j  ,bi,bj)
-CML     &      aW2d(i  ,j  ,bi,bj)*cg2d_s(i-1,j  ,bi,bj)
-CML     &     +aW2d(i+1,j  ,bi,bj)*cg2d_s(i+1,j  ,bi,bj)
-CML     &     +aS2d(i  ,j  ,bi,bj)*cg2d_s(i  ,j-1,bi,bj)
-CML     &     +aS2d(i  ,j+1,bi,bj)*cg2d_s(i  ,j+1,bi,bj)
-CML     &     +aC2d(i  ,j  ,bi,bj)*cg2d_s(i  ,j  ,bi,bj)
           alphaTile(bi,bj) = alphaTile(bi,bj)
      &                     + cg2d_s(i,j,bi,bj)*cg2d_q(i,j,bi,bj)
          ENDDO
@@ -369,15 +364,10 @@ C--    Do the error calcuation here to consolidate global reductions
           DO i=1,sNx
            cg2d_v(i,j,bi,bj) =
      &     aW2d(i,j,bi,bj)*cg2d_y(i-1,j  ,bi,bj)
-     &    +aS2d(i,j,bi,bj)*cg2d_y(i+1,j  ,bi,bj)
-     &    + rt1(i,j,bi,bj)*cg2d_y(i  ,j-1,bi,bj)
-     &    + rt2(i,j,bi,bj)*cg2d_y(i  ,j+1,bi,bj)
+     &    +aE2d(i,j,bi,bj)*cg2d_y(i+1,j  ,bi,bj)
+     &    +aS2d(i,j,bi,bj)*cg2d_y(i  ,j-1,bi,bj)
+     &    +aN2d(i,j,bi,bj)*cg2d_y(i  ,j+1,bi,bj)
      &    +aC2d(i,j,bi,bj)*cg2d_y(i  ,j  ,bi,bj)
-CML     &       aW2d(i  ,j  ,bi,bj)*cg2d_y(i-1,j  ,bi,bj)
-CML     &      +aW2d(i+1,j  ,bi,bj)*cg2d_y(i+1,j  ,bi,bj)
-CML     &      +aS2d(i  ,j  ,bi,bj)*cg2d_y(i  ,j-1,bi,bj)
-CML     &      +aS2d(i  ,j+1,bi,bj)*cg2d_y(i  ,j+1,bi,bj)
-CML     &      +aC2d(i  ,j  ,bi,bj)*cg2d_y(i  ,j  ,bi,bj)
            eta_qrNtile(bi,bj) = eta_qrNtile(bi,bj)
      &      +cg2d_y(i,j,bi,bj)*cg2d_r(i,j,bi,bj)
            deltaTile(bi,bj) = deltaTile(bi,bj)
