@@ -666,6 +666,7 @@ CML      IF ( ipass .EQ. 1 ) THEN
 
        nIterMin = 1
        ICOUNT1 = SEAICElinearIterMax
+       residUini = LSR_ERROR
        DO bj=myByLo(myThid),myByHi(myThid)
         DO bi=myBxLo(myThid),myBxHi(myThid)
          DO j=jMin,jMax
@@ -684,6 +685,7 @@ CML      IF ( ipass .EQ. 1 ) THEN
 
        nIterMin = 1
        ICOUNT2 = SEAICElinearIterMax
+       residVini = LSR_ERROR
        DO bj=myByLo(myThid),myByHi(myThid)
         DO bi=myBxLo(myThid),myBxHi(myThid)
          DO j=jMin,jMax

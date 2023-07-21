@@ -124,7 +124,7 @@ CEOP
 
 C--   Initialise auxiliary constant, some output variable and inverter
       cg2dNormaliseRHS = .TRUE.
-      cg2dTolerance = 1.e-05
+      cg2dTolerance = firstResidual
       cg2dTolerance_sq = cg2dTolerance*cg2dTolerance
       minResidualSq = -1. _d 0
       eta_qrNM1     =  1. _d 0
@@ -134,13 +134,16 @@ C--   preconditioner
        DO bi=myBxLo(myThid),myBxHi(myThid)
         DO j=1-OLy,sNy+OLy
          DO i=1-OLx,sNx+OLx
-          pC(i,j,bi,bj) = 1. _d 0 / aC2d(i,j,bi,bj)
+          pC(i,j,bi,bj) = 1. _d 0 / MAX( aC2d(i,j,bi,bj),1.D-10 )
           pW(i,j,bi,bj) = 0. _d 0
           pS(i,j,bi,bj) = 0. _d 0
          ENDDO
         ENDDO
        ENDDO
       ENDDO
+CMLC--   Update overlap regions
+CML      CALL EXCH_XY_RS( pC, myThid )
+CML      CALL EXCH_UV_XY_RS( pW, pS, .FALSE., myThid )
       cg2dNorm = 1.
 
 C--   Normalise RHS
