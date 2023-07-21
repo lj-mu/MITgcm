@@ -702,12 +702,12 @@ CML      IF ( ipass .EQ. 1 ) THEN
 
        CALL EXCH_UV_XY_RL( uIce, vIce,.TRUE.,myThid)
 
-       WRITE(standardMessageUnit,'(A,I4,1P2E16.8)')
-     &      ' SEAICE_LSR: CG2D, ICOUNT1, residUini, residUend =',
-     &      ICOUNT1, residUini, S1
-       WRITE(standardMessageUnit,'(A,I4,1P2E16.8)')
-     &      ' SEAICE_LSR: CG2D, ICOUNT2, residVini, residVend =',
-     &      ICOUNT2, residVini, S2
+       WRITE(standardMessageUnit,'(A,2I5,1P2E16.8)')
+     &   ' SEAICE_LSR: CG2D, ipass, ICOUNT1, residUini, residUend =',
+     &   ipass, ICOUNT1, residUini, S1
+       WRITE(standardMessageUnit,'(A,2I5,1P2E16.8)')
+     &   ' SEAICE_LSR: CG2D, ipass, ICOUNT2, residVini, residVend =',
+     &   ipass, ICOUNT2, residVini, S2
 
       ELSE
       ICOUNT1 = linearIterLoc
