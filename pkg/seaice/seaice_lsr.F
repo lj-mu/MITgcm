@@ -146,7 +146,7 @@ C     tkey  :: tape key (depends on tile indices and lnkey)
 #endif /* SEAICE_ALLOW_CHECK_LSR_CONVERGENCE */
       LOGICAL printResidual
       _RL residUini, residVini, residUend, residVend
-      _RL minResidSqU, minResidSqV
+      _RL minResidSqU, minResidSqV, residUiniCG2D, residViniCG2D
       INTEGER nIterMin
 #ifdef SEAICE_ALLOW_FREEDRIFT
       _RL uRes (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
@@ -666,7 +666,7 @@ CML      IF ( ipass .EQ. 1 ) THEN
 
        nIterMin = 1
        ICOUNT1 = SEAICElinearIterMax
-       residUini = LSR_ERROR
+       residUiniCG2D = LSR_ERROR
        DO bj=myByLo(myThid),myByHi(myThid)
         DO bi=myBxLo(myThid),myBxHi(myThid)
          DO j=jMin,jMax
@@ -679,13 +679,13 @@ CML      IF ( ipass .EQ. 1 ) THEN
        CALL SEAICE_CG2D_SR(
      I      BU, AU, CU, -uRt1, -uRt2,
      U      uTmp, uIce,
-     O      residUini, minResidSqU, S1,
+     O      residUiniCG2D, minResidSqU, S1,
      U      ICOUNT1, nIterMin,
      I      myThid )
 
        nIterMin = 1
        ICOUNT2 = SEAICElinearIterMax
-       residVini = LSR_ERROR
+       residViniCG2D = LSR_ERROR
        DO bj=myByLo(myThid),myByHi(myThid)
         DO bi=myBxLo(myThid),myBxHi(myThid)
          DO j=jMin,jMax
@@ -698,7 +698,7 @@ CML      IF ( ipass .EQ. 1 ) THEN
        CALL SEAICE_CG2D_SR(
      I      BV, -vRt1, -vRt2, AV, CV,
      U      vTmp, vIce,
-     O      residVini, minResidSqV, S2,
+     O      residViniCG2D, minResidSqV, S2,
      U      ICOUNT2, nIterMin,
      I      myThid )
 
@@ -706,10 +706,10 @@ CML      IF ( ipass .EQ. 1 ) THEN
 
        WRITE(standardMessageUnit,'(A,2I5,1P2E16.8)')
      &   ' SEAICE_LSR: CG2D, ipass, ICOUNT1, residUini, residUend =',
-     &   ipass, ICOUNT1, residUini, S1
+     &   ipass, ICOUNT1, residUiniCG2D, S1
        WRITE(standardMessageUnit,'(A,2I5,1P2E16.8)')
      &   ' SEAICE_LSR: CG2D, ipass, ICOUNT2, residVini, residVend =',
-     &   ipass, ICOUNT2, residVini, S2
+     &   ipass, ICOUNT2, residViniCG2D, S2
 
       ELSE
       ICOUNT1 = linearIterLoc

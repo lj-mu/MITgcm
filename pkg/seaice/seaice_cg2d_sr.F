@@ -116,7 +116,7 @@ c     INTEGER actualIts
       _RS  pW   (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RS  pS   (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RS  pC   (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RL  cg2dNorm
+CML      _RL  cg2dNorm
       LOGICAL cg2dNormaliseRHS
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       LOGICAL printResidual
@@ -125,6 +125,7 @@ CEOP
 C--   Initialise auxiliary constant, some output variable and inverter
       cg2dNormaliseRHS = .TRUE.
       cg2dTolerance = firstResidual
+
       cg2dTolerance_sq = cg2dTolerance*cg2dTolerance
       minResidualSq = -1. _d 0
       eta_qrNM1     =  1. _d 0
@@ -144,7 +145,7 @@ C--   preconditioner
 CMLC--   Update overlap regions
 CML      CALL EXCH_XY_RS( pC, myThid )
 CML      CALL EXCH_UV_XY_RS( pW, pS, .FALSE., myThid )
-      cg2dNorm = 1.
+CML      cg2dNorm = 1.
 
 C--   Normalise RHS
       rhsMax = 0. _d 0
@@ -152,7 +153,7 @@ C--   Normalise RHS
        DO bi=myBxLo(myThid),myBxHi(myThid)
         DO j=1,sNy
          DO i=1,sNx
-          cg2d_b(i,j,bi,bj) = cg2d_b(i,j,bi,bj)*cg2dNorm
+CML          cg2d_b(i,j,bi,bj) = cg2d_b(i,j,bi,bj)*cg2dNorm
           rhsMax = MAX(ABS(cg2d_b(i,j,bi,bj)),rhsMax)
          ENDDO
         ENDDO
