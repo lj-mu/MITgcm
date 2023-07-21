@@ -146,6 +146,8 @@ C     tkey  :: tape key (depends on tile indices and lnkey)
 #endif /* SEAICE_ALLOW_CHECK_LSR_CONVERGENCE */
       LOGICAL printResidual
       _RL residUini, residVini, residUend, residVend
+      _RL minResidSqU, minResidSqV
+      INTEGER nIterMin
 #ifdef SEAICE_ALLOW_FREEDRIFT
       _RL uRes (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL vRes (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
@@ -657,6 +659,57 @@ CML#ifdef ALLOW_AUTODIFF_TAMC
 CMLCADJ LOOP = iteration uice, vice = comlev1_lsr
 CML#endif /* ALLOW_AUTODIFF_TAMC */
 
+CML      IF ( ipass .EQ. 1 ) THEN
+      IF ( .TRUE. ) THEN
+       doIterate4u = .FALSE.
+       doIterate4v = .FALSE.
+
+       nIterMin = 1
+       ICOUNT1 = SEAICElinearIterMax
+       DO bj=myByLo(myThid),myByHi(myThid)
+        DO bi=myBxLo(myThid),myBxHi(myThid)
+         DO j=jMin,jMax
+          DO i=iMin,iMax
+           uTmp(i,j,bi,bj) = rhsU(i,j,bi,bj)
+          ENDDO
+         ENDDO
+        ENDDO
+       ENDDO
+       CALL SEAICE_CG2D_SR(
+     I      BU, AU, CU, uRt1, uRt2,
+     U      uTmp, uIce,
+     O      residUini, minResidSqU, S1,
+     U      ICOUNT1, nIterMin,
+     I      myThid )
+
+       nIterMin = 1
+       ICOUNT2 = SEAICElinearIterMax
+       DO bj=myByLo(myThid),myByHi(myThid)
+        DO bi=myBxLo(myThid),myBxHi(myThid)
+         DO j=jMin,jMax
+          DO i=iMin,iMax
+           vTmp(i,j,bi,bj) = rhsV(i,j,bi,bj)
+          ENDDO
+         ENDDO
+        ENDDO
+       ENDDO
+       CALL SEAICE_CG2D_SR(
+     I      BV, vRt1, vRt2, AV, CV,
+     U      vTmp, vIce,
+     O      residVini, minResidSqV, S2,
+     U      ICOUNT2, nIterMin,
+     I      myThid )
+
+       CALL EXCH_UV_XY_RL( uIce, vIce,.TRUE.,myThid)
+
+       WRITE(standardMessageUnit,'(A,I4,1P2E16.8)')
+     &      ' SEAICE_LSR: CG2D, ICOUNT1, residUini, residUend =',
+     &      ICOUNT1, residUini, S1
+       WRITE(standardMessageUnit,'(A,I4,1P2E16.8)')
+     &      ' SEAICE_LSR: CG2D, ICOUNT2, residVini, residVend =',
+     &      ICOUNT2, residVini, S2
+
+      ELSE
       ICOUNT1 = linearIterLoc
       ICOUNT2 = linearIterLoc
 
@@ -771,7 +824,7 @@ C     save u/vIce prior to iteration
           ENDDO
 
           IF ( doIterate4u ) THEN
-C Solve for uIce :
+C     Solve for uIce :
            CALL SEAICE_LSR_TRIDIAGU(
      I          AU, BU, CU, uRt1, uRt2, rhsU, uTmp, seaiceMaskU, WFAU,
      U          uIce,
@@ -848,6 +901,8 @@ C--    end doIterate4u or doIterate4v
        ENDIF
       ENDDO
 C ITERATION END -----------------------------------------------------
+C     ipass == 1
+      ENDIF
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
