@@ -212,8 +212,8 @@ C-    Initialise saved solution
           cg2d_r(i,j,bi,bj) = cg2d_b(i,j,bi,bj) -
      &    (aW2d(i,j,bi,bj)*cg2d_x(i-1,j  ,bi,bj)
      &    +aS2d(i,j,bi,bj)*cg2d_x(i+1,j  ,bi,bj)
-     &    - rt1(i,j,bi,bj)*cg2d_x(i  ,j-1,bi,bj)
-     &    - rt2(i,j,bi,bj)*cg2d_x(i  ,j+1,bi,bj)
+     &    + rt1(i,j,bi,bj)*cg2d_x(i  ,j-1,bi,bj)
+     &    + rt2(i,j,bi,bj)*cg2d_x(i  ,j+1,bi,bj)
      &    +aC2d(i,j,bi,bj)*cg2d_x(i  ,j  ,bi,bj)
      &    )
           errTile(bi,bj)    = errTile(bi,bj)
@@ -291,8 +291,8 @@ C==    q = A.s
           cg2d_q(i,j,bi,bj) =
      &     aW2d(i,j,bi,bj)*cg2d_s(i-1,j  ,bi,bj)
      &    +aS2d(i,j,bi,bj)*cg2d_s(i+1,j  ,bi,bj)
-     &    - rt1(i,j,bi,bj)*cg2d_s(i  ,j-1,bi,bj)
-     &    - rt2(i,j,bi,bj)*cg2d_s(i  ,j+1,bi,bj)
+     &    + rt1(i,j,bi,bj)*cg2d_s(i  ,j-1,bi,bj)
+     &    + rt2(i,j,bi,bj)*cg2d_s(i  ,j+1,bi,bj)
      &    +aC2d(i,j,bi,bj)*cg2d_s(i  ,j  ,bi,bj)
 CML     &      aW2d(i  ,j  ,bi,bj)*cg2d_s(i-1,j  ,bi,bj)
 CML     &     +aW2d(i+1,j  ,bi,bj)*cg2d_s(i+1,j  ,bi,bj)
@@ -370,8 +370,8 @@ C--    Do the error calcuation here to consolidate global reductions
            cg2d_v(i,j,bi,bj) =
      &     aW2d(i,j,bi,bj)*cg2d_y(i-1,j  ,bi,bj)
      &    +aS2d(i,j,bi,bj)*cg2d_y(i+1,j  ,bi,bj)
-     &    - rt1(i,j,bi,bj)*cg2d_y(i  ,j-1,bi,bj)
-     &    - rt2(i,j,bi,bj)*cg2d_y(i  ,j+1,bi,bj)
+     &    + rt1(i,j,bi,bj)*cg2d_y(i  ,j-1,bi,bj)
+     &    + rt2(i,j,bi,bj)*cg2d_y(i  ,j+1,bi,bj)
      &    +aC2d(i,j,bi,bj)*cg2d_y(i  ,j  ,bi,bj)
 CML     &       aW2d(i  ,j  ,bi,bj)*cg2d_y(i-1,j  ,bi,bj)
 CML     &      +aW2d(i+1,j  ,bi,bj)*cg2d_y(i+1,j  ,bi,bj)

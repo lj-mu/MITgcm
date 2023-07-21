@@ -676,7 +676,7 @@ CML      IF ( ipass .EQ. 1 ) THEN
         ENDDO
        ENDDO
        CALL SEAICE_CG2D_SR(
-     I      BU, AU, CU, uRt1, uRt2,
+     I      BU, AU, CU, -uRt1, -uRt2,
      U      uTmp, uIce,
      O      residUini, minResidSqU, S1,
      U      ICOUNT1, nIterMin,
@@ -694,7 +694,7 @@ CML      IF ( ipass .EQ. 1 ) THEN
         ENDDO
        ENDDO
        CALL SEAICE_CG2D_SR(
-     I      BV, vRt1, vRt2, AV, CV,
+     I      BV, -vRt1, -vRt2, AV, CV,
      U      vTmp, vIce,
      O      residVini, minResidSqV, S2,
      U      ICOUNT2, nIterMin,
