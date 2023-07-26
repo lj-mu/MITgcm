@@ -645,12 +645,6 @@ C     so we hide this part of the code from TAF.
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
 C NOW DO ITERATION
-
-cph--- iteration starts here
-cph--- need to kick out goto
-      doIterate4u = .TRUE.
-      doIterate4v = .TRUE.
-
 C ITERATION START -----------------------------------------------------
 C     Ideally, we would like to use the loop-directive for this
 C     iterative loop, but (unsurprisingly) it does not seem to work for
@@ -659,8 +653,11 @@ CML#ifdef ALLOW_AUTODIFF_TAMC
 CMLCADJ LOOP = iteration uice, vice = comlev1_lsr
 CML#endif /* ALLOW_AUTODIFF_TAMC */
 
-CML      IF ( ipass .EQ. 1 ) THEN
-      IF ( .TRUE. ) THEN
+CMLJ  Using CG2d to solve the u,v mom equations
+CMLJ  I didn't add 'SEAICEuseLSRcg' in the PARAMS.h etc..,
+CMLJ    as you might perfer the SEAICE_OPTIONS.h and also      
+CMLJ    used if for the velocity update just after the nonlinear loop.
+      IF ( SEAICEuseLSRcg ) THEN
        doIterate4u = .FALSE.
        doIterate4v = .FALSE.
 
@@ -675,7 +672,8 @@ CML      IF ( ipass .EQ. 1 ) THEN
           ENDDO
          ENDDO
         ENDDO
-       ENDDO
+      ENDDO
+
        CALL SEAICE_CG2D_SR(
      I      BU, AU, CU, -uRt1, -uRt2,
      U      uTmp, uIce,
@@ -711,7 +709,13 @@ CML      IF ( ipass .EQ. 1 ) THEN
      &   ' SEAICE_LSR: CG2D, ipass, ICOUNT2, residVini, residVend =',
      &   ipass, ICOUNT2, residViniCG2D, S2
 
+CMLJ   CG solver ends here -----------------------------------------------------
+
       ELSE
+
+      doIterate4u = .TRUE.
+      doIterate4v = .TRUE.
+         
       ICOUNT1 = linearIterLoc
       ICOUNT2 = linearIterLoc
 
@@ -840,7 +844,7 @@ C Solve for vIce
      U          vIce,
      I          iMin, iMax, jMin, jMax, bi, bj, myTime, myIter, myThid )
           ENDIF
-
+          
 C     end bi,bj-loops
          ENDDO
         ENDDO

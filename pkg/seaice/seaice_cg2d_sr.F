@@ -107,15 +107,18 @@ c     INTEGER actualIts
       _RL    sumRHS, sumRHStile(nSx,nSy)
       _RL    rhsMax
       _RL    rhsNorm
+      _RL    aC, aCn, aCs, aCw, aCe, pFac, eps
       _RL    cg2d_min(1:sNx,1:sNy,nSx,nSy)
       _RL    cg2d_v(1:sNx,1:sNy,nSx,nSy)
       _RL    cg2d_q(1:sNx,1:sNy,nSx,nSy)
       _RL    cg2d_y(1-1:sNx+1,1-1:sNy+1,nSx,nSy)
       _RL    cg2d_r(1-1:sNx+1,1-1:sNy+1,nSx,nSy)
       _RL    cg2d_s(1-1:sNx+1,1-1:sNy+1,nSx,nSy)
-      _RS  pW   (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RS  pS   (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RS  pC   (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RS    pN(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RS    pS(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RS    pW(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RS    pE(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RS    pC(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 CML      _RL  cg2dNorm
       LOGICAL cg2dNormaliseRHS
       CHARACTER*(MAX_LEN_MBUF) msgBuf
@@ -131,20 +134,43 @@ C--   Initialise auxiliary constant, some output variable and inverter
       eta_qrNM1     =  1. _d 0
 
 C--   preconditioner
+C     Using pFac = 0.5 is much faster!
+C     I tested 0.51 and 0.49, where 0.51 is slower than 0.5,
+C       and 0.49 just blew up the solver.
+      pFac = 0.50D0
+
+C     eps is a small value used to truncate ac2d.
+C     Experiments suggest eps = 1.D0 is a good choice!
+C     I tested it with 1.D-12, 1.D-11, 1.D-10, 1.D-5, 1., 1.5, 2.,
+C     where 2. is the slowest, 1. is the fastest!      
+C     eps = 1.D-10
+      eps = 1.D0
+      
       DO bj=myByLo(myThid),myByHi(myThid)
        DO bi=myBxLo(myThid),myBxHi(myThid)
-        DO j=1-OLy,sNy+OLy
-         DO i=1-OLx,sNx+OLx
-          pC(i,j,bi,bj) = 1. _d 0 / MAX( aC2d(i,j,bi,bj),1.D-10 )
-          pW(i,j,bi,bj) = 0. _d 0
-          pS(i,j,bi,bj) = 0. _d 0
+        DO j=1,sNy
+         DO i=1,sNx
+           aC  = MAX(aC2d( i, j, bi,bj),eps)
+           aCs = MAX(aC2d( i,j-1,bi,bj),eps)
+           aCn = MAX(aC2d( i,j+1,bi,bj),eps)
+           aCw = MAX(aC2d(i-1,j, bi,bj),eps)
+           aCe = MAX(aC2d(i+1,j, bi,bj),eps)
+
+           pC(i,j,bi,bj) =  1. _d 0 / aC
+           pW(i,j,bi,bj) = -aW2d(i,j,bi,bj)/((pFac*(aCw+aC))**2)
+           pE(i,j,bi,bj) = -aE2d(i,j,bi,bj)/((pFac*(aCe+aC))**2)
+           pS(i,j,bi,bj) = -aS2d(i,j,bi,bj)/((pFac*(aCs+aC))**2)
+           pN(i,j,bi,bj) = -aN2d(i,j,bi,bj)/((pFac*(aCn+aC))**2)
          ENDDO
         ENDDO
        ENDDO
       ENDDO
-CMLC--   Update overlap regions
+
+CML--   Update overlap regions. Not necessary.
 CML      CALL EXCH_XY_RS( pC, myThid )
 CML      CALL EXCH_UV_XY_RS( pW, pS, .FALSE., myThid )
+      
+CMLJ    Check if we still need cg2dNorm. I would recommend removing!
 CML      cg2dNorm = 1.
 
 C--   Normalise RHS
@@ -264,11 +290,11 @@ C--    conjugate direction vector "s".
         DO j=1,sNy
          DO i=1,sNx
            cg2d_y(i,j,bi,bj) =
-     &       pC(i  ,j  ,bi,bj)*cg2d_r(i  ,j  ,bi,bj)
-     &      +pW(i  ,j  ,bi,bj)*cg2d_r(i-1,j  ,bi,bj)
-     &      +pW(i+1,j  ,bi,bj)*cg2d_r(i+1,j  ,bi,bj)
-     &      +pS(i  ,j  ,bi,bj)*cg2d_r(i  ,j-1,bi,bj)
-     &      +pS(i  ,j+1,bi,bj)*cg2d_r(i  ,j+1,bi,bj)
+     &       pC(i,j,bi,bj)*cg2d_r(i  ,j  ,bi,bj)
+     &      +pW(i,j,bi,bj)*cg2d_r(i-1,j  ,bi,bj)
+     &      +pE(i,j,bi,bj)*cg2d_r(i+1,j  ,bi,bj)
+     &      +pS(i,j,bi,bj)*cg2d_r(i  ,j-1,bi,bj)
+     &      +pN(i,j,bi,bj)*cg2d_r(i  ,j+1,bi,bj)
            cg2d_s(i,j,bi,bj)  = cg2d_y(i,j,bi,bj)
            eta_qrNtile(bi,bj) = eta_qrNtile(bi,bj)
      &      +cg2d_y(i,j,bi,bj)*cg2d_r(i,j,bi,bj)
@@ -340,11 +366,11 @@ C--    z = M^-1 r
          DO j=1,sNy
           DO i=1,sNx
            cg2d_y(i,j,bi,bj) =
-     &       pC(i  ,j  ,bi,bj)*cg2d_r(i  ,j  ,bi,bj)
-     &      +pW(i  ,j  ,bi,bj)*cg2d_r(i-1,j  ,bi,bj)
-     &      +pW(i+1,j  ,bi,bj)*cg2d_r(i+1,j  ,bi,bj)
-     &      +pS(i  ,j  ,bi,bj)*cg2d_r(i  ,j-1,bi,bj)
-     &      +pS(i  ,j+1,bi,bj)*cg2d_r(i  ,j+1,bi,bj)
+     &       pC(i,j,bi,bj)*cg2d_r(i  ,j  ,bi,bj)
+     &      +pW(i,j,bi,bj)*cg2d_r(i-1,j  ,bi,bj)
+     &      +pE(i,j,bi,bj)*cg2d_r(i+1,j  ,bi,bj)
+     &      +pS(i,j,bi,bj)*cg2d_r(i  ,j-1,bi,bj)
+     &      +pN(i,j,bi,bj)*cg2d_r(i  ,j+1,bi,bj)
           ENDDO
          ENDDO
         ENDDO
