@@ -156,11 +156,14 @@ C     tkey  :: tape key (depends on tile indices and lnkey)
       _RL residUmix, residVmix
 #endif /* SEAICE_ALLOW_FREEDRIFT */
       _RL areaMinLoc
+      LOGICAL SEAICEuseLSRcg
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
       printResidual = debugLevel.GE.debLevA
      &  .AND. DIFFERENT_MULTIPLE( SEAICE_monFreq, myTime, deltaTClock )
+
+      SEAICEuseLSRcg = .TRUE.
 
 C     extra overlap for (restricted) additive Schwarz method
       jMin = 1   - SEAICE_OLy
@@ -654,8 +657,8 @@ CMLCADJ LOOP = iteration uice, vice = comlev1_lsr
 CML#endif /* ALLOW_AUTODIFF_TAMC */
 
 CMLJ  Using CG2d to solve the u,v mom equations
-CMLJ  I didn't add 'SEAICEuseLSRcg' in the PARAMS.h etc..,
-CMLJ    as you might perfer the SEAICE_OPTIONS.h and also      
+CMLJ  I did not add 'SEAICEuseLSRcg' in the PARAMS.h etc..,
+CMLJ    as you might perfer the SEAICE_OPTIONS.h and also
 CMLJ    used if for the velocity update just after the nonlinear loop.
       IF ( SEAICEuseLSRcg ) THEN
        doIterate4u = .FALSE.
@@ -715,7 +718,7 @@ CMLJ   CG solver ends here -----------------------------------------------------
 
       doIterate4u = .TRUE.
       doIterate4v = .TRUE.
-         
+
       ICOUNT1 = linearIterLoc
       ICOUNT2 = linearIterLoc
 
@@ -844,7 +847,7 @@ C Solve for vIce
      U          vIce,
      I          iMin, iMax, jMin, jMax, bi, bj, myTime, myIter, myThid )
           ENDIF
-          
+
 C     end bi,bj-loops
          ENDDO
         ENDDO
